@@ -53,23 +53,38 @@ class Zone:
     def rebuild_geometry(self) -> None:
         points_np = np.array(self.points, dtype=np.int32)
 
+        # Bounding box of the zone, clipped to the frame. Only pixels inside it can belong to the zone,
+        # so detection only needs to look at this part of the frame
+        x, y, width, height = cv2.boundingRect(points_np)
+
+        left = max(x, 0)
+        top = max(y, 0)
+        right = min(x + width, self.frame_width)
+        bottom = min(y + height, self.frame_height)
+
+        # Zone completely outside the frame: use a 1x1 empty mask, so it is never occupied
+        if right <= left or bottom <= top:
+            left, top, right, bottom = 0, 0, 1, 1
+
+        # Polygon mask the size of the bounding box. Points are shifted so the box starts at (0, 0)
         polygon_mask = np.zeros(
             (
-                self.frame_height,
-                self.frame_width
+                bottom - top,
+                right - left
             ),
             dtype=np.uint8
         )
 
         cv2.fillPoly(
             polygon_mask,
-            [points_np],
+            [points_np - [left, top]],
             255
         )
 
         total_pixels = cv2.countNonZero(polygon_mask)
 
         self.points_np = points_np
+        self.bounding_box = (left, top, right, bottom)
         self.polygon_mask = polygon_mask
         self.total_pixels = total_pixels
 
@@ -315,8 +330,11 @@ class DetectionEngine:
         events = []
 
         for zone in self.zone_repository.zones:
+            # Only compare the part of the motion mask inside the zone's bounding box
+            left, top, right, bottom = zone.bounding_box
+
             zone_mask = cv2.bitwise_and(
-                motion_frame,
+                motion_frame[top:bottom, left:right],
                 zone.polygon_mask
             )
 

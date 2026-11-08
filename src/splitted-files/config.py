@@ -6,16 +6,13 @@ class AppConfig:
     FRAME_WIDTH = 1280
     FRAME_HEIGHT = 720
 
-    # Camera window size. This is the nominal (maximum) preview size and also defines the preview aspect ratio.
+    # Preview size on screen. This is the nominal (maximum) preview size and also defines the preview aspect ratio.
     # When the application window is too small, the previews are scaled down to fit
     DISPLAY_WIDTH = 800
     DISPLAY_HEIGHT = 450
 
     # Padding in pixels around and between the preview areas and the right column
     LAYOUT_PADDING = 10
-
-    # Smallest preview width allowed when the application window is very small
-    MIN_PREVIEW_WIDTH = 160
 
     # Application window size
     WINDOW_WIDTH = 1250
@@ -27,7 +24,9 @@ class AppConfig:
     FONT_THICKNESS = 2
     MASK_FONT_SCALE = 0.6
 
-    # Frame rate. Number increase, lowers refresh rate and CPU usage, also lowers detection accuracy
+    # Delay in milliseconds after each processed frame before the next one starts. This is not a fixed frame rate:
+    # the real rate also depends on how long each frame takes. Larger value = fewer frames per second, lower CPU
+    # usage, and slower reaction to zone changes
     GUI_UPDATE_DELAY = 30
 
     # Percentage of changed pixels required to mark a zone as occupied

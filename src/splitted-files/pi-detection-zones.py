@@ -219,9 +219,7 @@ class DetectionApp:
 
         except Exception:
             if not self.camera_failure_logged:
-                if hasattr(self, "log_panel"):
-                    self.log_panel.add_log(Messages.CAMERA_CAPTURE_FAILED)
-
+                self.log_panel.add_log(Messages.CAMERA_CAPTURE_FAILED)
                 self.camera_failure_logged = True
 
             return None

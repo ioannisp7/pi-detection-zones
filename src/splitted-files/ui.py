@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import cv2
-import numpy as np
 import traceback
 
 from config import AppConfig, Messages
@@ -57,26 +56,26 @@ class DetectionUI:
         return right_frame
 
     def create_main_frames(self):
-        mainFrame = tk.Frame(self.root)
+        main_frame = tk.Frame(self.root)
 
-        mainFrame.pack(
+        main_frame.pack(
             anchor="nw",
             padx=AppConfig.LAYOUT_PADDING,
             pady=AppConfig.LAYOUT_PADDING
         )
 
-        leftColumn = tk.Frame(mainFrame)
+        left_column = tk.Frame(main_frame)
 
-        leftColumn.pack(
+        left_column.pack(
             side=tk.LEFT,
             anchor="n",
             padx=(0, AppConfig.LAYOUT_PADDING)
         )
 
-        rightColumn = tk.Frame(mainFrame)
-        rightColumn.pack(side=tk.LEFT,anchor="n")
-        self.right_column = rightColumn
-        camera_frame = tk.Frame(leftColumn)
+        right_column = tk.Frame(main_frame)
+        right_column.pack(side=tk.LEFT,anchor="n")
+        self.right_column = right_column
+        camera_frame = tk.Frame(left_column)
 
         camera_frame.pack(
             fill=tk.BOTH,
@@ -84,12 +83,12 @@ class DetectionUI:
             pady=(0, AppConfig.LAYOUT_PADDING)
         )
 
-        mask_frame = tk.Frame(leftColumn)
+        mask_frame = tk.Frame(left_column)
         mask_frame.pack(fill=tk.BOTH,expand=True)
-        rightTopFrame = tk.Frame(rightColumn)
+        right_top_frame = tk.Frame(right_column)
 
-        rightTopFrame.pack(fill=tk.X, pady=(0, 10))
-        left_frame = tk.Frame(rightTopFrame)
+        right_top_frame.pack(fill=tk.X, pady=(0, 10))
+        left_frame = tk.Frame(right_top_frame)
 
         left_frame.pack(
             side=tk.LEFT,
@@ -97,9 +96,9 @@ class DetectionUI:
             padx=(0, 15)
         )
 
-        center_frame = tk.Frame(rightTopFrame)
+        center_frame = tk.Frame(right_top_frame)
         center_frame.pack(side=tk.LEFT, anchor="n")
-        right_frame = tk.Frame(rightColumn)
+        right_frame = tk.Frame(right_column)
 
         right_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -161,8 +160,9 @@ class DetectionUI:
             int(available_height / 2 / aspect_ratio)
         )
 
-        width = max(width, AppConfig.MIN_PREVIEW_WIDTH)
-        height = int(width * aspect_ratio)
+        # Never 0 or negative, cv2.resize would fail
+        width = max(width, 1)
+        height = max(int(width * aspect_ratio), 1)
 
         if width == self.display_width and height == self.display_height:
             return
@@ -233,9 +233,6 @@ class DetectionUI:
 
     def enable_stop_button(self):
         self.stop_button.config(state=tk.NORMAL)
-
-    def disable_stop_button(self):
-        self.stop_button.config(state=tk.DISABLED)
 
     def set_stop_button_label(self, preview_enabled):
         if preview_enabled:
@@ -366,9 +363,9 @@ class LogPanel:
         ).pack()
 
         # Container frame
-        logFrame = tk.Frame(right_frame)
+        log_frame = tk.Frame(right_frame)
 
-        logFrame.pack(
+        log_frame.pack(
             fill=tk.BOTH,
             expand=True,
             padx=10,
@@ -376,13 +373,13 @@ class LogPanel:
         )
 
         # Scrollbar
-        scrollbar = tk.Scrollbar(logFrame)
+        scrollbar = tk.Scrollbar(log_frame)
 
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Text widget
         self.log_text = tk.Text(
-            logFrame,
+            log_frame,
             width=45,
             yscrollcommand=scrollbar.set,
             wrap=tk.WORD
@@ -424,12 +421,12 @@ class PreviewSystem:
 
     def __init__(
         self,
-        camera_panel,
+        ui,
         engine,
         app,
         zone_repository):
 
-        self.ui = camera_panel
+        self.ui = ui
         self.engine = engine
         self.app = app
         self.zone_repository = zone_repository
@@ -696,7 +693,7 @@ class ZoneEditorController:
         self.refresh_zone_selector()
         self.log_panel.add_log(f"{deleted_name} {Messages.ZONE_DELETED_SUFFIX}")
 
-    def refresh_zone_selector(self, selectIndex=0):
+    def refresh_zone_selector(self, select_index=0):
         zone_names = [
             zone.name
             for zone in self.zone_repository.zones
@@ -706,11 +703,11 @@ class ZoneEditorController:
 
         max_index = len(zone_names) - 1
 
-        selectIndex = max(
+        select_index = max(
             0,
-            min(selectIndex, max_index))
+            min(select_index, max_index))
 
-        self.ui.zone_selector.current(selectIndex)
+        self.ui.zone_selector.current(select_index)
 
         self.load_zone_into_editor()
 
