@@ -14,6 +14,13 @@ class DetectionUI:
         # Camera widgets
         self.camera_label = None
         self.mask_label = None
+        self.camera_frame = None
+        self.mask_frame = None
+        self.right_column = None
+
+        # Current preview size. Starts at the nominal size and shrinks when the window is too small
+        self.display_width = AppConfig.DISPLAY_WIDTH
+        self.display_height = AppConfig.DISPLAY_HEIGHT
 
         # Control buttons
         self.capture_button = None
@@ -44,6 +51,9 @@ class DetectionUI:
         self.create_buttons_area(left_frame)
         self.create_zone_editor(center_frame)
 
+        # Resize the previews whenever the window size changes
+        self.root.bind("<Configure>", self.fit_previews_to_window)
+
         return right_frame
 
     def create_main_frames(self):
@@ -51,8 +61,8 @@ class DetectionUI:
 
         mainFrame.pack(
             anchor="nw",
-            padx=10,
-            pady=10
+            padx=AppConfig.LAYOUT_PADDING,
+            pady=AppConfig.LAYOUT_PADDING
         )
 
         leftColumn = tk.Frame(mainFrame)
@@ -60,17 +70,18 @@ class DetectionUI:
         leftColumn.pack(
             side=tk.LEFT,
             anchor="n",
-            padx=(0, 10)
+            padx=(0, AppConfig.LAYOUT_PADDING)
         )
 
         rightColumn = tk.Frame(mainFrame)
         rightColumn.pack(side=tk.LEFT,anchor="n")
+        self.right_column = rightColumn
         camera_frame = tk.Frame(leftColumn)
 
         camera_frame.pack(
             fill=tk.BOTH,
             expand=True,
-            pady=(0, 10)
+            pady=(0, AppConfig.LAYOUT_PADDING)
         )
 
         mask_frame = tk.Frame(leftColumn)
@@ -105,23 +116,62 @@ class DetectionUI:
         camera_frame,
         mask_frame):
 
+        self.camera_frame = camera_frame
+        self.mask_frame = mask_frame
+
         camera_frame.pack_propagate(False)
         mask_frame.pack_propagate(False)
 
         camera_frame.config(
-            width=AppConfig.DISPLAY_WIDTH,
-            height=AppConfig.DISPLAY_HEIGHT
+            width=self.display_width,
+            height=self.display_height
         )
 
         mask_frame.config(
-            width=AppConfig.DISPLAY_WIDTH,
-            height=AppConfig.DISPLAY_HEIGHT
+            width=self.display_width,
+            height=self.display_height
         )
 
         self.camera_label = tk.Label(camera_frame, bd=0)
         self.camera_label.pack(anchor="w")
         self.mask_label = tk.Label(mask_frame,bd=0)
         self.mask_label.pack(anchor="w")
+
+    def fit_previews_to_window(self, event=None):
+        # <Configure> also fires for every child widget, only react to the window itself
+        if event is not None and event.widget is not self.root:
+            return
+
+        padding = AppConfig.LAYOUT_PADDING
+        aspect_ratio = AppConfig.DISPLAY_HEIGHT / AppConfig.DISPLAY_WIDTH
+
+        # Vertical space: top margin, gap between the two previews, bottom margin. Two previews share what is left
+        available_height = self.root.winfo_height() - 3 * padding
+
+        # Horizontal space: left margin, gap before the right column, right margin. The right column keeps its size
+        available_width = (
+            self.root.winfo_width()
+            - 3 * padding
+            - self.right_column.winfo_reqwidth()
+        )
+
+        width = min(
+            AppConfig.DISPLAY_WIDTH,
+            available_width,
+            int(available_height / 2 / aspect_ratio)
+        )
+
+        width = max(width, AppConfig.MIN_PREVIEW_WIDTH)
+        height = int(width * aspect_ratio)
+
+        if width == self.display_width and height == self.display_height:
+            return
+
+        self.display_width = width
+        self.display_height = height
+
+        for frame in (self.camera_frame, self.mask_frame):
+            frame.config(width=width, height=height)
 
     def create_buttons_area(self, left_frame):
         self.capture_button = tk.Button(
@@ -186,6 +236,12 @@ class DetectionUI:
 
     def disable_stop_button(self):
         self.stop_button.config(state=tk.DISABLED)
+
+    def set_stop_button_label(self, preview_enabled):
+        if preview_enabled:
+            self.stop_button.config(text="Stop Preview")
+        else:
+            self.stop_button.config(text="Resume Preview")
 
     def create_zone_editor(self, center_frame):
         tk.Label(
@@ -420,12 +476,14 @@ class PreviewSystem:
 
         overlay = self.render_camera_overlay(raw_frame, zones)
 
+        display_size = (
+            self.ui.display_width,
+            self.ui.display_height
+        )
+
         overlay = cv2.resize(
             overlay,
-            (
-                AppConfig.DISPLAY_WIDTH,
-                AppConfig.DISPLAY_HEIGHT
-            )
+            display_size
         )
 
         photo = self.to_photo(overlay)
@@ -443,12 +501,7 @@ class PreviewSystem:
                 zones
             )
 
-            mask_frame = cv2.resize(mask_frame,
-                (
-                    AppConfig.DISPLAY_WIDTH,
-                    AppConfig.DISPLAY_HEIGHT
-                )
-            )
+            mask_frame = cv2.resize(mask_frame, display_size)
 
             mask_photo = self.to_photo(mask_frame)
             self.ui.mask_label.config(image=mask_photo)
@@ -599,16 +652,16 @@ class ZoneEditorController:
         x = int(
             event.x
             * AppConfig.FRAME_WIDTH
-            / AppConfig.DISPLAY_WIDTH
+            / self.ui.display_width
         )
 
         y = int(
             event.y
             * AppConfig.FRAME_HEIGHT
-            / AppConfig.DISPLAY_HEIGHT
+            / self.ui.display_height
         )
 
-        self.log_panel.add_log(f"Mouse click: x={x}, y={y}")
+        self.log_panel.add_log(Messages.MOUSE_CLICK.format(x=x, y=y))
 
         active_index = (self.app.active_point_index)
 
@@ -754,7 +807,7 @@ class ZoneEditorController:
                 Messages.INVALID_COORDINATE_FORMAT,
 
             Messages.COORDINATE_OUT_OF_BOUNDS:
-                "Coordinate out of bounds",
+                Messages.COORDINATE_OUT_OF_BOUNDS,
 
             Messages.EMPTY_ZONE_NAME:
                 Messages.EMPTY_ZONE_NAME,
@@ -766,4 +819,4 @@ class ZoneEditorController:
                 Messages.DUPLICATE_ZONE_NAME
         }
 
-        return messages.get(str(error), "Validation error")
+        return messages.get(str(error), Messages.VALIDATION_ERROR)

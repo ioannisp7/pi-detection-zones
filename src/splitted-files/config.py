@@ -6,9 +6,16 @@ class AppConfig:
     FRAME_WIDTH = 1280
     FRAME_HEIGHT = 720
 
-    # Camera window size
+    # Camera window size. This is the nominal (maximum) preview size and also defines the preview aspect ratio.
+    # When the application window is too small, the previews are scaled down to fit
     DISPLAY_WIDTH = 800
     DISPLAY_HEIGHT = 450
+
+    # Padding in pixels around and between the preview areas and the right column
+    LAYOUT_PADDING = 10
+
+    # Smallest preview width allowed when the application window is very small
+    MIN_PREVIEW_WIDTH = 160
 
     # Application window size
     WINDOW_WIDTH = 1250
@@ -63,19 +70,25 @@ class Messages:
     DETECTION_ARMED = "Occupancy detection armed"
     INVALID_JSON_FILE = "Selected JSON file is invalid"
     EXITING = "Exiting"
+    OBJECT_ENTERED = "Object ENTERED {zone_name}"
+    OBJECT_EXITED = "Object EXITED {zone_name}"
+    MOUSE_CLICK = "Mouse click: x={x}, y={y}"
 
     #Error messages
-    POINTS_AS_LIST = "POINTS_AS_LIST"
+    POINTS_AS_LIST = "Invalid layout file: zone points must be a list"
     DUPLICATE_ZONE_NAME = "Zone name already exists"
     INVALID_COORDINATE_FORMAT = "Invalid coordinate format"
-    COORDINATE_OUT_OF_BOUNDS = "COORDINATE_OUT_OF_BOUNDS"
+    COORDINATE_OUT_OF_BOUNDS = "Coordinate out of bounds"
     EMPTY_ZONE_NAME = "Zone name cannot be empty"
     INVALID_ZONE_POINTS = "Zone requires 4 valid points"
-    INVALID_LAYOUT_FILE = "INVALID_LAYOUT_FILE"
-    ZONES_AS_LIST = "ZONES_AS_LIST"
-    INVALID_ZONE_FORMAT = "INVALID_ZONE_FORMAT"
-    ZONE_CONTAIN_4_POINTS = "ZONE_CONTAIN_4_POINTS"
-    POINT_AS_LIST = "POINT_AS_LIST"
-    ZONE_CONTAIN_XY = "ZONE_CONTAIN_XY"
-    POINTS_AS_INTEGERS = "POINTS_AS_INTEGERS"
+    INVALID_LAYOUT_FILE = "Invalid layout file: 'zones' entry is missing"
+    ZONES_AS_LIST = "Invalid layout file: 'zones' must be a list"
+    INVALID_ZONE_FORMAT = "Invalid layout file: each zone needs a 'name' and 'points'"
+    ZONE_CONTAIN_4_POINTS = "Invalid layout file: each zone must have 4 points"
+    POINT_AS_LIST = "Invalid layout file: each point must be a list [x, y]"
+    ZONE_CONTAIN_XY = "Invalid layout file: each point must have an x and a y value"
+    POINTS_AS_INTEGERS = "Invalid layout file: point coordinates must be whole numbers"
+    VALIDATION_ERROR = "Validation error"
+    LAYOUT_SAVE_FAILED = "Layout could not be saved: {error}"
+    NO_CAMERA_FRAME = "No camera frame available, background not captured"
     CAMERA_CAPTURE_FAILED = "Camera frame capture failed"

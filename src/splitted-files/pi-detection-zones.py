@@ -4,7 +4,7 @@ from picamera2 import Picamera2
 import tkinter as tk
 from tkinter import filedialog
 from config import AppConfig, Messages
-from engine import Zone, MotionDetectionPipeline, ZoneRepository, DetectionEngine
+from engine import DetectionEngine
 from ui import DetectionUI, LogPanel, PreviewSystem, ZoneEditorController
 
 class DetectionApp:
@@ -87,7 +87,13 @@ class DetectionApp:
         if not file_path:
             return
 
-        self.engine.zone_repository.save_layout(file_path)
+        try:
+            self.engine.zone_repository.save_layout(file_path)
+
+        except Exception as error:
+            self.log_panel.add_log(Messages.LAYOUT_SAVE_FAILED.format(error=error))
+
+            return
 
         self.log_panel.add_log(Messages.LAYOUT_SAVED)
 
@@ -158,6 +164,7 @@ class DetectionApp:
         success = self.engine.capture_background_reference(self.latest_frame)
 
         if not success:
+            self.log_panel.add_log(Messages.NO_CAMERA_FRAME)
             return
 
         if not self.engine.detection_enabled:
@@ -175,12 +182,12 @@ class DetectionApp:
         if self.preview_enabled:
             self.preview_enabled = False
             self.preview_controller.stop_preview()
-            self.ui.stop_button.config(text="Resume Preview")
+            self.ui.set_stop_button_label(self.preview_enabled)
             self.log_panel.add_log(Messages.PREVIEW_STOPPED)
 
         else:
             self.preview_enabled = True
-            self.ui.stop_button.config(text="Stop Preview")
+            self.ui.set_stop_button_label(self.preview_enabled)
             self.log_panel.add_log(Messages.PREVIEW_RESUMED)
 
     def start_camera(self):

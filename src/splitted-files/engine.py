@@ -111,8 +111,6 @@ class ZoneRepository:
 
     def delete_zone(self, index: int) -> None:
 
-        zone = self.zones[index]
-        deleted_name = zone.name
         del self.zones[index]
 
     def save_layout(self, file_path: str) -> None:
@@ -335,10 +333,10 @@ class DetectionEngine:
             current = occupancy_result["occupied"]
 
             if not previous and current:
-                events.append(f"Object ENTERED {zone.name}")
+                events.append(Messages.OBJECT_ENTERED.format(zone_name=zone.name))
 
             elif previous and not current:
-                events.append(f"Object EXITED {zone.name}")
+                events.append(Messages.OBJECT_EXITED.format(zone_name=zone.name))
 
             results.append({
                 "zone_name": zone.name,

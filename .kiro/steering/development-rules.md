@@ -84,15 +84,13 @@ Do not treat planned future components as if they already exist in the current a
 
 Continue following the existing project conventions documented in `tech.md`.
 
-Application tunables should remain in `AppConfig` in `config.py`.
-
 User-facing and log messages should remain in `Messages` in `config.py`.
 
-This includes application log messages, status messages, button labels and other user-visible text.
+This includes application log messages, status messages and error messages. Button labels, field labels and titles stay in `ui.py`.
 
-Do not introduce new hardcoded user-facing strings elsewhere in the application.
+Do not introduce new hardcoded messages elsewhere in the application.
 
-Existing user-facing strings that currently sit outside `Messages` should be migrated to `Messages` when intentionally cleaning up the relevant code or when the relevant code is being modified.
+Existing messages that currently sit outside `Messages` should be migrated to `Messages` when intentionally cleaning up the relevant code or when the relevant code is being modified.
 
 ## Git
 

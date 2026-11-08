@@ -18,5 +18,5 @@ layout.json              # Example saved zone layout
 - Dependency direction: `pi-detection-zones.py` → `ui.py` / `engine.py` → `config.py`. `engine.py` must not import GUI code.
 - `DetectionEngine` owns detection state and the `ZoneRepository`. Each frame, `process_detection(frame)` returns a dict with `raw_frame`, `motion_mask`, `zone_results` and `events`.
 - `DetectionApp.run_frame_loop` runs via `root.after(GUI_UPDATE_DELAY)`. It captures a frame, runs the engine, updates `PreviewSystem`, and logs events.
-- `ZoneEditorController` handles zone create, edit and delete, and clicks on the camera preview. Zone validation errors use `Messages` codes.
-- Keep new features in the matching layer: detection logic in `engine.py`, widgets in `ui.py`, constants in `config.py`.
+- `ZoneEditorController` handles zone create, edit and delete, and clicks on the camera preview. Zone validation errors use `Messages` entries.
+- Keep new features in the matching layer: detection logic in `engine.py`, widgets in `ui.py`.
