@@ -51,20 +51,18 @@ class AppConfig:
     MORPH_KERNEL = np.ones((KERNEL_SIZE, KERNEL_SIZE), np.uint8)
     
     # Colors (BGR format for OpenCV)
-    COLOR_WHITE = (255, 255, 255)
     COLOR_GREEN = (30, 255, 0)
     COLOR_RED = (0, 0, 255)
 
   
 class Messages:
-    ADD_NEW_ZONE_OPTION = "Add new zone"
     LAYOUT_LOADED = "Layout loaded"
     LAYOUT_SAVED = "Layout saved"
     PREVIEW_STOPPED = "Preview stopped"
     PREVIEW_RESUMED = "Preview resumed"
-    ZONE_ADDED_SUFFIX = "zone created"
-    ZONE_UPDATED_SUFFIX = "zone updated"
-    ZONE_DELETED_SUFFIX = "zone deleted"
+    ZONE_ADDED = "{zone_name} zone created"
+    ZONE_UPDATED = "{zone_name} zone updated"
+    ZONE_DELETED = "{zone_name} zone deleted"
     BACKGROUND_CAPTURED = "Background reference captured"
     DETECTION_ARMED = "Occupancy detection armed"
     INVALID_JSON_FILE = "Selected JSON file is invalid"
@@ -80,6 +78,7 @@ class Messages:
     COORDINATE_OUT_OF_BOUNDS = "Coordinate out of bounds"
     EMPTY_ZONE_NAME = "Zone name cannot be empty"
     INVALID_ZONE_POINTS = "Zone requires 4 valid points"
+    LAYOUT_NOT_OBJECT = "Invalid layout file: expected an object with a 'zones' list"
     INVALID_LAYOUT_FILE = "Invalid layout file: 'zones' entry is missing"
     ZONES_AS_LIST = "Invalid layout file: 'zones' must be a list"
     INVALID_ZONE_FORMAT = "Invalid layout file: each zone needs a 'name' and 'points'"
@@ -90,4 +89,5 @@ class Messages:
     VALIDATION_ERROR = "Validation error"
     LAYOUT_SAVE_FAILED = "Layout could not be saved: {error}"
     NO_CAMERA_FRAME = "No camera frame available, background not captured"
+    CAMERA_START_FAILED = "Camera could not be started: {error}"
     CAMERA_CAPTURE_FAILED = "Camera frame capture failed"

@@ -14,7 +14,6 @@ class DetectionApp:
         self.preview_enabled = True
         self.camera_failure_logged = False
         self.latest_frame = None
-        self.active_point_index = None
         self.engine = DetectionEngine(
             AppConfig.FRAME_WIDTH,
             AppConfig.FRAME_HEIGHT
@@ -26,15 +25,13 @@ class DetectionApp:
             self.engine,
             self.ui,
             self.log_panel,
-            self,
             AppConfig.FRAME_WIDTH,
             AppConfig.FRAME_HEIGHT
         )
         self.preview_controller = PreviewSystem(
             self.ui,
             self.engine,
-            self,
-            self.engine.zone_repository
+            self
         )
         self.start_camera()
         self.bind_events()
@@ -108,7 +105,8 @@ class DetectionApp:
         try:
             self.engine.load_layout(file_path)
 
-        except json.JSONDecodeError:
+        # UnicodeDecodeError: the selected file is not a text file (for example an image)
+        except (json.JSONDecodeError, UnicodeDecodeError):
             self.log_panel.add_log(Messages.INVALID_JSON_FILE)
 
             return
@@ -199,16 +197,19 @@ class DetectionApp:
                         "size": (
                             AppConfig.FRAME_WIDTH,
                             AppConfig.FRAME_HEIGHT
-                        )
+                        ),
+                        # "RGB888" in Picamera2 gives 3-channel frames in BGR order, which is what OpenCV
+                        # expects. The default ("XBGR8888") gives RGBX order and swaps red and blue
+                        "format": "RGB888"
                     }
                 )
             )
 
             self.picam2.start()
 
-        except Exception:
+        except Exception as error:
             self.picam2 = None
-            self.log_panel.add_log(traceback.format_exc())
+            self.log_panel.add_log(Messages.CAMERA_START_FAILED.format(error=error))
 
     def capture_frame(self):
         if self.picam2 is None:

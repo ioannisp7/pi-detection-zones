@@ -149,6 +149,9 @@ class ZoneRepository:
         with open(file_path, "r") as file:
             layout_data = json.load(file)
 
+        if not isinstance(layout_data, dict):
+            raise ValueError(Messages.LAYOUT_NOT_OBJECT)
+
         if "zones" not in layout_data:
             raise ValueError(Messages.INVALID_LAYOUT_FILE)
 
@@ -203,8 +206,6 @@ class DetectionEngine:
         frame_width,
         frame_height):
 
-        self.frame_width = frame_width
-        self.frame_height = frame_height
         self.zone_repository = ZoneRepository(frame_width,frame_height)
         self.pipeline = MotionDetectionPipeline()
         self.zone_states = {}

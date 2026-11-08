@@ -6,6 +6,9 @@ import traceback
 
 from config import AppConfig, Messages
 
+# Last entry of the zone selector drop-down, used to create a new zone
+ADD_NEW_ZONE_OPTION = "Add new zone"
+
 class DetectionUI:
     def __init__(self, root):
         self.root = root
@@ -248,7 +251,7 @@ class DetectionUI:
 
         self.zone_selector = ttk.Combobox(
             center_frame,
-            values=[Messages.ADD_NEW_ZONE_OPTION],
+            values=[ADD_NEW_ZONE_OPTION],
             state="readonly",
             width=25
         )
@@ -423,13 +426,11 @@ class PreviewSystem:
         self,
         ui,
         engine,
-        app,
-        zone_repository):
+        app):
 
         self.ui = ui
         self.engine = engine
         self.app = app
-        self.zone_repository = zone_repository
 
     def build_zone_display_data(self, zone_results):
 
@@ -440,7 +441,7 @@ class PreviewSystem:
 
         zones = []
 
-        for zone in self.zone_repository.zones:
+        for zone in self.engine.zone_repository.zones:
             result = detection_map.get(zone.name,
                 {
                     "occupied": False,
@@ -485,13 +486,11 @@ class PreviewSystem:
 
         photo = self.to_photo(overlay)
 
-        if self.ui.camera_label is not None:
-            self.ui.camera_label.config(image=photo)
+        self.ui.camera_label.config(image=photo)
+        self.ui.camera_label.image = photo
 
-            self.ui.camera_label.image = photo
-
-        if (self.engine.detection_enabled
-            and motion_mask is not None):
+        # motion_mask is None until detection is armed
+        if motion_mask is not None:
 
             mask_frame = self.render_motion_overlay(
                 motion_mask,
@@ -505,14 +504,11 @@ class PreviewSystem:
             self.ui.mask_label.image = mask_photo
 
     def stop_preview(self):
-        if self.ui.camera_label is not None:
+        self.ui.camera_label.config(image="")
+        self.ui.camera_label.image = None
 
-            self.ui.camera_label.config(image="")
-            self.ui.camera_label.image = None
-
-        if self.ui.mask_label is not None:
-            self.ui.mask_label.config(image="")
-            self.ui.mask_label.image = None
+        self.ui.mask_label.config(image="")
+        self.ui.mask_label.image = None
 
     def render_camera_overlay(self, frame, zones):
         overlay_frame = frame.copy()
@@ -553,9 +549,8 @@ class PreviewSystem:
         return overlay_frame
 
     def render_motion_overlay(self, mask, zones):
+        # The mask only contains 0 and 255, so after this conversion changed pixels are already white
         mask_color = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-
-        mask_color[mask > 0] = AppConfig.COLOR_WHITE
 
         for zone in zones:
             color = (
@@ -604,7 +599,6 @@ class ZoneEditorController:
         engine,
         ui,
         log_panel,
-        app,
         frame_width,
         frame_height):
 
@@ -612,10 +606,12 @@ class ZoneEditorController:
         self.zone_repository = engine.zone_repository
         self.ui = ui
         self.log_panel = log_panel
-        self.app = app
 
         self.frame_width = frame_width
         self.frame_height = frame_height
+
+        # Index of the point entry that has focus. A click on the camera preview fills this entry
+        self.active_point_index = None
 
     def parse_point(self, text_value: str) -> list[int]:
 
@@ -640,27 +636,24 @@ class ZoneEditorController:
         return [x, y]
 
     def select_point_entry(self, index: int) -> None:
-        self.app.active_point_index = index
+        self.active_point_index = index
 
     def on_camera_click(self, event: tk.Event) -> None:
-        if self.ui.camera_label is None:
-            return
-
         x = int(
             event.x
-            * AppConfig.FRAME_WIDTH
+            * self.frame_width
             / self.ui.display_width
         )
 
         y = int(
             event.y
-            * AppConfig.FRAME_HEIGHT
+            * self.frame_height
             / self.ui.display_height
         )
 
         self.log_panel.add_log(Messages.MOUSE_CLICK.format(x=x, y=y))
 
-        active_index = (self.app.active_point_index)
+        active_index = (self.active_point_index)
 
         if active_index is not None:
             self.ui.set_point_text(
@@ -674,13 +667,13 @@ class ZoneEditorController:
         selected_index = (self.ui.zone_selector.current())
 
         if selected_index >= len(self.zone_repository.zones):
-            self.app.active_point_index = None
+            self.active_point_index = None
             self.ui.clear_editor()
             return
 
         zone = (self.zone_repository.zones[selected_index])
         self.ui.load_zone(zone)
-        self.app.active_point_index = None
+        self.active_point_index = None
 
     def delete_selected_zone(self):
         selected_index = (self.ui.zone_selector.current())
@@ -691,13 +684,13 @@ class ZoneEditorController:
         deleted_name = self.zone_repository.zones[selected_index].name
         self.engine.delete_zone(selected_index)
         self.refresh_zone_selector()
-        self.log_panel.add_log(f"{deleted_name} {Messages.ZONE_DELETED_SUFFIX}")
+        self.log_panel.add_log(Messages.ZONE_DELETED.format(zone_name=deleted_name))
 
     def refresh_zone_selector(self, select_index=0):
         zone_names = [
             zone.name
             for zone in self.zone_repository.zones
-        ] + [Messages.ADD_NEW_ZONE_OPTION]
+        ] + [ADD_NEW_ZONE_OPTION]
 
         self.ui.zone_selector["values"] = (zone_names)
 
@@ -772,9 +765,7 @@ class ZoneEditorController:
             if is_new_zone:
                 self.engine.add_zone(new_zone_name, new_points)
 
-                self.log_panel.add_log(
-                    f"{new_zone_name} {Messages.ZONE_ADDED_SUFFIX}"
-                )
+                self.log_panel.add_log(Messages.ZONE_ADDED.format(zone_name=new_zone_name))
 
             else:
                 self.engine.update_zone(
@@ -783,7 +774,7 @@ class ZoneEditorController:
                     new_points
                 )
 
-                self.log_panel.add_log(f"{new_zone_name} {Messages.ZONE_UPDATED_SUFFIX}")
+                self.log_panel.add_log(Messages.ZONE_UPDATED.format(zone_name=new_zone_name))
 
         except Exception:
             self.log_panel.add_log(traceback.format_exc())
