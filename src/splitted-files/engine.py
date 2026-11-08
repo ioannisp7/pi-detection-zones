@@ -77,7 +77,7 @@ class Zone:
 
         cv2.fillPoly(
             polygon_mask,
-            [points_np - [left, top]],
+            [points_np - np.array([left, top], dtype=np.int32)],
             255
         )
 
