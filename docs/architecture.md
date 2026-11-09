@@ -1,4 +1,4 @@
-1. High-Level Architecture
+# 1. High-Level Architecture
 
 The application is organized into four main source files:
 
@@ -26,9 +26,9 @@ Occupancy transitions are identified and returned as events.
 
 The graphical interface displays the camera image, detection mask, zone status and event log.
 
-2. Application Components
+# 2. Application Components
 
-2.1 Application Entry Point – pi-detection-zones.py
+## 2.1 Application Entry Point – pi-detection-zones.py
 
 The entry point contains the DetectionApp class, which coordinates the application's components.
 
@@ -56,7 +56,7 @@ Frame processing is scheduled through Tkinter's root.after() mechanism.
 
 The application uses a single main execution loop for camera capture, detection processing and graphical interface updates.
 
-2.2 Configuration – config.py
+## 2.2 Configuration – config.py
 
 The configuration module contains two classes.
 
@@ -102,7 +102,7 @@ Input validation and other application errors.
 
 This centralizes configuration values and messages, avoiding unnecessary duplication throughout the application.
 
-2.3 Detection Engine – engine.py
+## 2.3 Detection Engine – engine.py
 
 The detection engine contains the application's core processing and zone-management functionality.
 
@@ -204,7 +204,7 @@ Occupancy is determined by calculating the ratio of changed pixels within a zone
 
 A zone is considered occupied when its occupancy ratio exceeds the configured OCCUPANCY_PERCENT threshold.
 
-2.4 Graphical Interface – ui.py
+## 2.4 Graphical Interface – ui.py
 
 The graphical interface is implemented using Tkinter and is divided into four main components.
 
@@ -292,7 +292,7 @@ Mapping mouse clicks on the camera preview to original camera-frame coordinates.
 
 Refreshing the zone selector after configuration changes.
 
-3. Detection Processing Workflow
+## 3. Detection Processing Workflow
 
 The normal detection workflow is as follows:
 
@@ -322,7 +322,7 @@ The application updates the graphical previews and system log.
 
 The processing loop repeats continuously while the application is running.
 
-4. Occupancy Detection and State Management
+## 4. Occupancy Detection and State Management
 
 Each configured zone maintains an occupancy state containing:
 
@@ -340,7 +340,7 @@ The current implementation identifies occupancy transitions but does not publish
 
 Transition messages are returned as strings and displayed by the graphical interface.
 
-5. Camera Management
+## 5. Camera Management
 
 Camera initialization and frame capture are handled by the application entry point using the Picamera2 library.
 
@@ -358,7 +358,7 @@ Camera initialization and capture errors are handled by the application, with er
 
 The camera is closed during application shutdown to release the camera resource.
 
-6. Zone Layout Persistence
+## 6. Zone Layout Persistence
 
 Zone configurations can be saved and loaded using JSON files.
 
@@ -372,7 +372,7 @@ The geometric data required for detection, such as bounding boxes and polygon ma
 
 This keeps the saved layout independent of internal image-processing data structures.
 
-7. Execution Model and Dependencies
+## 7. Execution Model and Dependencies
 
 The application currently runs as a single Python process using Tkinter's main event loop.
 
@@ -394,7 +394,7 @@ Tkinter / ttk – Graphical user interface.
 
 Python standard library – JSON handling, file dialogs, data structures and error handling.
 
-8. Current Scope and Limitations
+## 8. Current Scope and Limitations
 
 The project is a generic camera-based zone occupancy detection application.
 
@@ -422,7 +422,7 @@ Autonomous railway operation without the graphical application.
 
 The detection engine identifies changes in configured image areas. It does not determine what caused those changes or interpret them as railway movements.
 
-9. Architectural Design Principles
+## 9. Architectural Design Principles
 
 The project follows these principles:
 
@@ -438,7 +438,7 @@ Configurable detection: Detection thresholds and image-cleanup settings can be a
 
 Simple execution model: The current application uses a single-process, event-loop-based execution model without unnecessary concurrency.
 
-10. Potential Future Integration
+## 10. Potential Future Integration
 
 The detection functionality may be reused as a vision component in other applications.
 
