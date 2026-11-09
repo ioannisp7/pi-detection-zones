@@ -157,6 +157,7 @@ class ZoneRepository:
             raise ValueError(Messages.ZONES_AS_LIST)
 
         zones = []
+        zone_names = set()
 
         for zone_data in layout_data["zones"]:
             if not isinstance(zone_data, dict):
@@ -164,6 +165,20 @@ class ZoneRepository:
 
             if "name" not in zone_data or "points" not in zone_data:
                 raise ValueError(Messages.INVALID_ZONE_FORMAT)
+
+            # Zone name: same rules as the zone editor (not empty, unique)
+            name = zone_data["name"]
+
+            if not isinstance(name, str):
+                raise ValueError(Messages.LAYOUT_ZONE_NAME_NOT_TEXT)
+
+            if name.strip() == "":
+                raise ValueError(Messages.LAYOUT_EMPTY_ZONE_NAME)
+
+            if name in zone_names:
+                raise ValueError(Messages.LAYOUT_DUPLICATE_ZONE_NAME.format(zone_name=name))
+
+            zone_names.add(name)
 
             points = zone_data["points"]
 
@@ -180,11 +195,25 @@ class ZoneRepository:
                 if len(point) != 2:
                     raise ValueError(Messages.ZONE_CONTAIN_XY)
 
-                if not isinstance(point[0], int) or not isinstance(point[1], int):
-                    raise ValueError(Messages.POINTS_AS_INTEGERS)
+                for value in point:
+                    # bool is a subclass of int in Python, so true/false would otherwise pass as 1/0
+                    if isinstance(value, bool) or not isinstance(value, int):
+                        raise ValueError(Messages.POINTS_AS_INTEGERS)
+
+                # Same bounds as the zone editor: inside the camera frame
+                x, y = point
+
+                if not (0 <= x < self.frame_width and 0 <= y < self.frame_height):
+                    raise ValueError(
+                        Messages.LAYOUT_POINT_OUT_OF_BOUNDS.format(
+                            zone_name=name,
+                            width=self.frame_width,
+                            height=self.frame_height
+                        )
+                    )
 
             zone = Zone(
-                zone_data["name"],
+                name,
                 points,
                 self.frame_width,
                 self.frame_height
