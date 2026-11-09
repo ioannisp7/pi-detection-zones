@@ -11,7 +11,6 @@ class DetectionApp:
 
     def __init__(self):
         self.running = True
-        self.preview_enabled = True
         self.camera_failure_logged = False
         self.latest_frame = None
         self.engine = DetectionEngine(
@@ -30,8 +29,7 @@ class DetectionApp:
         )
         self.preview_controller = PreviewSystem(
             self.ui,
-            self.engine,
-            self
+            self.engine
         )
         self.start_camera()
         self.bind_events()
@@ -50,7 +48,7 @@ class DetectionApp:
         return root
 
     def bind_events(self):
-        # CONTROL BUTTONS
+        # Control buttons
         self.ui.capture_button.config(command=self.capture_background)
         self.ui.arm_button.config(command=self.arm_detection)
         self.ui.save_button.config(command=self.save_layout_gui)
@@ -58,13 +56,13 @@ class DetectionApp:
         self.ui.quit_button.config(command=self.quit_program)
         self.ui.stop_button.config(command=self.toggle_preview)
 
-        # ZONE EDITOR
+        # Zone editor
         self.ui.apply_button.config(command=self.zone_editor_controller.apply_zone_changes)
         self.ui.delete_button.config(command=self.zone_editor_controller.delete_selected_zone)
 
         self.ui.zone_selector.bind("<<ComboboxSelected>>", self.zone_editor_controller.load_zone_into_editor)
 
-        # POINT ENTRY FOCUS
+        # Point entry focus
         for index, entry in enumerate(self.ui.point_entries):
             entry.bind(
                 "<FocusIn>",
@@ -72,8 +70,8 @@ class DetectionApp:
                 self.zone_editor_controller.select_point_entry(i)
             )
 
-        # CAMERA CLICK
-        self.ui.camera_label.bind("<Button-1>",self.zone_editor_controller.on_camera_click)
+        # Camera click
+        self.ui.camera_label.bind("<Button-1>", self.zone_editor_controller.on_camera_click)
 
     def save_layout_gui(self) -> None:
         file_path = filedialog.asksaveasfilename(
@@ -150,10 +148,7 @@ class DetectionApp:
         self.running = False
         self.log_panel.add_log(Messages.EXITING)
 
-        try:
-            self.stop_camera()
-        except Exception:
-            self.log_panel.add_log(traceback.format_exc())
+        self.stop_camera()
 
         self.root.quit()
         self.root.destroy()
@@ -177,16 +172,17 @@ class DetectionApp:
         self.log_panel.add_log(Messages.DETECTION_ARMED)
 
     def toggle_preview(self):
-        if self.preview_enabled:
-            self.preview_enabled = False
-            self.preview_controller.stop_preview()
-            self.ui.set_stop_button_label(self.preview_enabled)
-            self.log_panel.add_log(Messages.PREVIEW_STOPPED)
+        preview = self.preview_controller
+        preview.enabled = not preview.enabled
+
+        if preview.enabled:
+            self.log_panel.add_log(Messages.PREVIEW_RESUMED)
 
         else:
-            self.preview_enabled = True
-            self.ui.set_stop_button_label(self.preview_enabled)
-            self.log_panel.add_log(Messages.PREVIEW_RESUMED)
+            preview.stop_preview()
+            self.log_panel.add_log(Messages.PREVIEW_STOPPED)
+
+        self.ui.set_stop_button_label(preview.enabled)
 
     def start_camera(self):
         try:
@@ -230,7 +226,8 @@ class DetectionApp:
             return
 
         try:
-            self.picam2.stop()
+            # close() stops the camera and releases it, so the next start can open it straight away
+            self.picam2.close()
         except Exception:
             self.log_panel.add_log(traceback.format_exc())
 

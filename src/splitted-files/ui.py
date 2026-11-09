@@ -76,7 +76,7 @@ class DetectionUI:
         )
 
         right_column = tk.Frame(main_frame)
-        right_column.pack(side=tk.LEFT,anchor="n")
+        right_column.pack(side=tk.LEFT, anchor="n")
         self.right_column = right_column
         camera_frame = tk.Frame(left_column)
 
@@ -87,7 +87,7 @@ class DetectionUI:
         )
 
         mask_frame = tk.Frame(left_column)
-        mask_frame.pack(fill=tk.BOTH,expand=True)
+        mask_frame.pack(fill=tk.BOTH, expand=True)
         right_top_frame = tk.Frame(right_column)
 
         right_top_frame.pack(fill=tk.X, pady=(0, 10))
@@ -136,7 +136,7 @@ class DetectionUI:
 
         self.camera_label = tk.Label(camera_frame, bd=0)
         self.camera_label.pack(anchor="w")
-        self.mask_label = tk.Label(mask_frame,bd=0)
+        self.mask_label = tk.Label(mask_frame, bd=0)
         self.mask_label.pack(anchor="w")
 
     def fit_previews_to_window(self, event=None):
@@ -357,7 +357,7 @@ class LogPanel:
     def __init__(self):
         self.log_text = None
 
-    # CREATE LOG AREA
+    # Create log area
     def create_log_area(self, right_frame):
 
         tk.Label(
@@ -399,11 +399,11 @@ class LogPanel:
         # Connect scrollbar to text widget
         scrollbar.config(command=self.log_text.yview)
 
-    # LOGGING SYSTEM
+    # Logging system
     def add_log(self, message: str) -> None:
         self.log_text.config(state=tk.NORMAL)
 
-        self.log_text.insert(tk.END,message + "\n")
+        self.log_text.insert(tk.END, message + "\n")
 
         # Limit log size
         max_lines = AppConfig.MAX_LOG_LINES
@@ -425,12 +425,13 @@ class PreviewSystem:
     def __init__(
         self,
         ui,
-        engine,
-        app):
+        engine):
 
         self.ui = ui
         self.engine = engine
-        self.app = app
+
+        # False while the preview is stopped (Stop Preview button)
+        self.enabled = True
 
     def build_zone_display_data(self, zone_results):
 
@@ -467,7 +468,7 @@ class PreviewSystem:
         motion_mask,
         zone_results):
 
-        if not self.app.preview_enabled:
+        if not self.enabled:
             return
 
         zones = self.build_zone_display_data(zone_results)
@@ -618,7 +619,7 @@ class ZoneEditorController:
         split_values = text_value.split(",")
 
         if len(split_values) != 2:
-            raise ValueError( Messages.INVALID_COORDINATE_FORMAT)
+            raise ValueError(Messages.INVALID_COORDINATE_FORMAT)
 
         try:
             x = int(split_values[0])
@@ -627,10 +628,10 @@ class ZoneEditorController:
         except ValueError:
             raise ValueError(Messages.INVALID_COORDINATE_FORMAT)
 
-        if (x < 0 or x >= self.frame_width):
+        if x < 0 or x >= self.frame_width:
             raise ValueError(Messages.COORDINATE_OUT_OF_BOUNDS)
 
-        if (y < 0 or y >= self.frame_height):
+        if y < 0 or y >= self.frame_height:
             raise ValueError(Messages.COORDINATE_OUT_OF_BOUNDS)
 
         return [x, y]
@@ -653,7 +654,7 @@ class ZoneEditorController:
 
         self.log_panel.add_log(Messages.MOUSE_CLICK.format(x=x, y=y))
 
-        active_index = (self.active_point_index)
+        active_index = self.active_point_index
 
         if active_index is not None:
             self.ui.set_point_text(
@@ -664,19 +665,19 @@ class ZoneEditorController:
         self,
         event: tk.Event | None = None):
 
-        selected_index = (self.ui.zone_selector.current())
+        selected_index = self.ui.zone_selector.current()
 
         if selected_index >= len(self.zone_repository.zones):
             self.active_point_index = None
             self.ui.clear_editor()
             return
 
-        zone = (self.zone_repository.zones[selected_index])
+        zone = self.zone_repository.zones[selected_index]
         self.ui.load_zone(zone)
         self.active_point_index = None
 
     def delete_selected_zone(self):
-        selected_index = (self.ui.zone_selector.current())
+        selected_index = self.ui.zone_selector.current()
 
         if selected_index >= len(self.zone_repository.zones):
             return
@@ -692,7 +693,7 @@ class ZoneEditorController:
             for zone in self.zone_repository.zones
         ] + [ADD_NEW_ZONE_OPTION]
 
-        self.ui.zone_selector["values"] = (zone_names)
+        self.ui.zone_selector["values"] = zone_names
 
         max_index = len(zone_names) - 1
 
@@ -705,10 +706,7 @@ class ZoneEditorController:
         self.load_zone_into_editor()
 
     def get_points_from_editor(self):
-        point_texts = (self.ui.get_point_texts())
-
-        if len(point_texts) != 4:
-            raise ValueError(Messages.INVALID_ZONE_POINTS)
+        point_texts = self.ui.get_point_texts()
 
         new_points = []
 
@@ -738,20 +736,14 @@ class ZoneEditorController:
                 raise ValueError(Messages.DUPLICATE_ZONE_NAME)
 
     def apply_zone_changes(self):
-        selected_index = (
-            self.ui.zone_selector.current())
+        selected_index = self.ui.zone_selector.current()
 
-        new_zone_name = (
-            self.ui.get_zone_name())
+        new_zone_name = self.ui.get_zone_name()
 
-        is_new_zone = (
-            selected_index >= len(
-                self.zone_repository.zones
-            )
-        )
+        is_new_zone = selected_index >= len(self.zone_repository.zones)
 
         try:
-            new_points = (self.get_points_from_editor())
+            new_points = self.get_points_from_editor()
 
             self.validate_zone_name(new_zone_name)
 
@@ -788,7 +780,7 @@ class ZoneEditorController:
 
         self.refresh_zone_selector(new_selection)
 
-    def get_validation_message(self,error: ValueError):
+    def get_validation_message(self, error: ValueError):
 
         messages = {
             Messages.INVALID_COORDINATE_FORMAT:

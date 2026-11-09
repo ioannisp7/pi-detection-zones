@@ -24,7 +24,6 @@ class MotionDetectionPipeline:
             cv2.THRESH_BINARY)
 
         if AppConfig.USE_CLEANUP:
-
             motion_mask = cv2.morphologyEx(
                 motion_mask,
                 cv2.MORPH_OPEN,
@@ -98,7 +97,7 @@ class ZoneRepository:
         self.frame_width = frame_width
         self.frame_height = frame_height
 
-        self.zones: list["Zone"] = []
+        self.zones: list[Zone] = []
 
     def add_zone(
         self,
@@ -125,7 +124,6 @@ class ZoneRepository:
         zone.update_points(points)
 
     def delete_zone(self, index: int) -> None:
-
         del self.zones[index]
 
     def save_layout(self, file_path: str) -> None:
@@ -156,17 +154,15 @@ class ZoneRepository:
             raise ValueError(Messages.INVALID_LAYOUT_FILE)
 
         if not isinstance(layout_data["zones"], list):
-
             raise ValueError(Messages.ZONES_AS_LIST)
 
         zones = []
 
         for zone_data in layout_data["zones"]:
             if not isinstance(zone_data, dict):
-
                 raise ValueError(Messages.INVALID_ZONE_FORMAT)
 
-            if ("name" not in zone_data or "points" not in zone_data):
+            if "name" not in zone_data or "points" not in zone_data:
                 raise ValueError(Messages.INVALID_ZONE_FORMAT)
 
             points = zone_data["points"]
@@ -184,7 +180,7 @@ class ZoneRepository:
                 if len(point) != 2:
                     raise ValueError(Messages.ZONE_CONTAIN_XY)
 
-                if (not isinstance(point[0], int) or not isinstance(point[1], int)):
+                if not isinstance(point[0], int) or not isinstance(point[1], int):
                     raise ValueError(Messages.POINTS_AS_INTEGERS)
 
             zone = Zone(
@@ -206,7 +202,7 @@ class DetectionEngine:
         frame_width,
         frame_height):
 
-        self.zone_repository = ZoneRepository(frame_width,frame_height)
+        self.zone_repository = ZoneRepository(frame_width, frame_height)
         self.pipeline = MotionDetectionPipeline()
         self.zone_states = {}
         self.background_frame = None
@@ -220,7 +216,7 @@ class DetectionEngine:
         }
 
     def ensure_zone_exists(self, zone_name):
-        self.zone_states.setdefault(zone_name,self.create_empty_state())
+        self.zone_states.setdefault(zone_name, self.create_empty_state())
 
     def remove_zone(self, zone_name):
         if zone_name in self.zone_states:
@@ -258,7 +254,6 @@ class DetectionEngine:
 
         return previous
 
-
     def enable_detection(self):
         self.detection_enabled = True
 
@@ -266,11 +261,9 @@ class DetectionEngine:
         if frame is None:
             return False
 
-        self.background_frame = (
-            cv2.cvtColor(
-                frame,
-                cv2.COLOR_BGR2GRAY
-            )
+        self.background_frame = cv2.cvtColor(
+            frame,
+            cv2.COLOR_BGR2GRAY
         )
 
         return True
@@ -313,7 +306,7 @@ class DetectionEngine:
                 "occupancy_ratio": 0
             }
 
-        occupancy_ratio = (occupancy_pixels / total_zone_pixels)
+        occupancy_ratio = occupancy_pixels / total_zone_pixels
 
         occupied = (
             occupancy_ratio >
@@ -326,7 +319,7 @@ class DetectionEngine:
             "occupancy_ratio": occupancy_ratio
         }
 
-    def process_all_zones(self,motion_frame):
+    def process_all_zones(self, motion_frame):
         results = []
         events = []
 
@@ -390,7 +383,7 @@ class DetectionEngine:
         name,
         points):
 
-        old_name = (self.zone_repository.zones[index].name)
+        old_name = self.zone_repository.zones[index].name
 
         self.zone_repository.update_zone(
             index,
@@ -402,7 +395,7 @@ class DetectionEngine:
             self.rename_zone(old_name, name)
 
     def delete_zone(self, index):
-        zone_name = (self.zone_repository.zones[index].name)
+        zone_name = self.zone_repository.zones[index].name
 
         self.zone_repository.delete_zone(index)
         self.remove_zone(zone_name)

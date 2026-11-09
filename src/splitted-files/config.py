@@ -41,7 +41,7 @@ class AppConfig:
     USE_CLEANUP = True
 
     # Morphology kernel size. Defines aggressiveness of cleanup
-    # Lower values remove tiny noise but keeps more detail. Higher values remove much more noise but damage image. 5 is
+    # Lower values remove tiny noise but keep more detail. Higher values remove much more noise but damage image. 5 is
     # moderate cleanup strength
     KERNEL_SIZE = 5
 
@@ -49,12 +49,12 @@ class AppConfig:
 
     # Pre-created morphology kernel matrix
     MORPH_KERNEL = np.ones((KERNEL_SIZE, KERNEL_SIZE), np.uint8)
-    
+
     # Colors (BGR format for OpenCV)
     COLOR_GREEN = (30, 255, 0)
     COLOR_RED = (0, 0, 255)
 
-  
+
 class Messages:
     LAYOUT_LOADED = "Layout loaded"
     LAYOUT_SAVED = "Layout saved"
@@ -71,7 +71,7 @@ class Messages:
     OBJECT_EXITED = "Object EXITED {zone_name}"
     MOUSE_CLICK = "Mouse click: x={x}, y={y}"
 
-    #Error messages
+    # Error messages
     POINTS_AS_LIST = "Invalid layout file: zone points must be a list"
     DUPLICATE_ZONE_NAME = "Zone name already exists"
     INVALID_COORDINATE_FORMAT = "Invalid coordinate format"
