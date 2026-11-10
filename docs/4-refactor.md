@@ -6,3 +6,5 @@ Setup test and run python script 11_full_re-factor.py
 
 3. Continued refactor of code. Code is more simplified and contains less classes.
 Setup test and run python script 12_simplify_code.py
+
+4. More code refactoring. Setup test and run python script 13_pi-detection-zones.py
