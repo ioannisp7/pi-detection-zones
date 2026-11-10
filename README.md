@@ -141,7 +141,7 @@ Layouts are plain JSON. Each zone has a name and four `[x, y]` points in camera 
 }
 ```
 
-`layout.json` in the project root is an example layout.
+`src/layout.json` is an example layout.
 
 ## Project structure
 
@@ -153,9 +153,9 @@ src/
     engine.py                Detection logic and zones (no GUI code)
     ui.py                    Window, previews, log panel and zone editor
   single-file/               Earlier single-file version, kept for reference
+  layout.json                Example zone layout
 test/                        Numbered scripts showing how the project developed
 docs/                        Development notes
-layout.json                  Example zone layout
 ```
 
 ## Status

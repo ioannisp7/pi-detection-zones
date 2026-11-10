@@ -77,7 +77,7 @@ This centralizes configuration values and messages, avoiding unnecessary duplica
 
 The detection engine contains the application's core processing and zone-management functionality.
 
-It consists of four main classes.
+It consists of five main classes.
 
 #### MotionDetectionPipeline
 
@@ -107,6 +107,17 @@ Each zone contains:
 - The total number of pixels within the polygon.
 
 The bounding-box and polygon-mask approach reduces unnecessary image processing by limiting occupancy calculations to the relevant area of each zone.
+
+#### OccupancyEvent
+
+Represents a single occupancy transition of a zone.
+
+Each event contains:
+
+- `zone_name` – The name of the zone whose state changed.
+- `occupied` – `True` when the zone became occupied, `False` when it became free.
+
+Events are immutable once created. They contain detection data only; converting them into log messages is the responsibility of the application entry point.
 
 #### ZoneRepository
 
@@ -144,7 +155,7 @@ For every processed frame, the engine returns:
 - The original camera frame.
 - The generated motion mask, when detection is enabled.
 - The occupancy results for the configured zones.
-- A list of occupancy transition messages.
+- A list of `OccupancyEvent` objects, one for each zone whose occupancy state changed.
 
 Occupancy is determined by calculating the ratio of changed pixels within a zone relative to its total polygon area.
 
@@ -230,8 +241,8 @@ The normal detection workflow is as follows:
 1. State transitions are identified:
    - Free to occupied: object entered the zone.
    - Occupied to free: object exited the zone.
-1. The engine returns the detection results and transition messages.
-1. The application updates the graphical previews and system log.
+1. The engine returns the detection results and an `OccupancyEvent` for each transition.
+1. The application updates the graphical previews and converts each event into a system log message.
 
 The processing loop repeats continuously while the application is running.
 
@@ -245,11 +256,11 @@ Each configured zone maintains an occupancy state containing:
 
 The engine maintains these states in its `zone_states` dictionary, indexed by zone name.
 
-Occupancy transition messages are generated only when the state changes. Repeated frames with the same occupancy state do not generate additional transition messages.
+Occupancy events are generated only when the state changes. Repeated frames with the same occupancy state do not generate additional events.
 
 The current implementation identifies occupancy transitions but does not publish them through a dedicated external event interface.
 
-Transition messages are returned as strings and displayed by the graphical interface.
+Transitions are returned as `OccupancyEvent` objects containing the zone name and the new occupancy state. The application entry point converts each event into a log message using the `OBJECT_ENTERED` and `OBJECT_EXITED` entries in `Messages`, and displays it in the system log.
 
 ## 5\. Camera Management
 
