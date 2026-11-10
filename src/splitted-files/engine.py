@@ -32,6 +32,13 @@ class MotionDetectionPipeline:
         return motion_mask
 
 
+@dataclass(frozen=True)
+class OccupancyEvent:
+    # Created when a zone changes state. occupied=True: the zone became occupied, False: it became free
+    zone_name: str
+    occupied: bool
+
+
 @dataclass
 class Zone:
     name: str
@@ -373,11 +380,9 @@ class DetectionEngine:
 
             current = occupancy_result["occupied"]
 
-            if not previous and current:
-                events.append(Messages.OBJECT_ENTERED.format(zone_name=zone.name))
-
-            elif previous and not current:
-                events.append(Messages.OBJECT_EXITED.format(zone_name=zone.name))
+            # Only state changes create an event
+            if current != previous:
+                events.append(OccupancyEvent(zone.name, current))
 
             results.append({
                 "zone_name": zone.name,

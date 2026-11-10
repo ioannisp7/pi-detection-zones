@@ -138,11 +138,16 @@ class DetectionApp:
             )
 
             for event in result["events"]:
-                self.log_panel.add_log(event)
+                self.log_panel.add_log(self.format_occupancy_event(event))
 
             self.latest_frame = frame
 
         self.root.after(AppConfig.GUI_UPDATE_DELAY, self.run_frame_loop)
+
+    def format_occupancy_event(self, event):
+        message = Messages.OBJECT_ENTERED if event.occupied else Messages.OBJECT_EXITED
+
+        return message.format(zone_name=event.zone_name)
 
     def quit_program(self):
         self.running = False
