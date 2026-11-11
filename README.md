@@ -69,11 +69,11 @@ cd pi-detection-zones
 
 ## Running
 
-The application must be started from `src/splitted-files/`:
+The application must be started from `src/`:
 
 ```bash
-cd src/splitted-files
-python3 pi-detection-zones.py
+cd src/
+python3 pi_detection_zones.py
 ```
 
 It needs the Pi camera and a desktop display.
@@ -113,7 +113,7 @@ Click **Stop Preview** to stop drawing the camera images. Detection and the log 
 
 ## Configuration
 
-Settings are in `AppConfig` in `src/splitted-files/config.py`. The most useful ones:
+Settings are in `AppConfig` in `src/config.py`. The most useful ones:
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -141,18 +141,17 @@ Layouts are plain JSON. Each zone has a name and four `[x, y]` points in camera 
 }
 ```
 
-`src/layout.json` is an example layout.
+`assets/layout.json` is an example layout.
 
 ## Project structure
 
 ```
 src/
-  splitted-files/            Current application
-    pi-detection-zones.py    Entry point: window, camera and frame loop
-    config.py                Settings (AppConfig) and log messages (Messages)
-    engine.py                Detection logic and zones (no GUI code)
-    ui.py                    Window, previews, log panel and zone editor
-  single-file/               Earlier single-file version, kept for reference
+  pi_detection_zones.py      Entry point: window, camera and frame loop
+  config.py                  Settings (AppConfig) and log messages (Messages)
+  engine.py                  Detection logic and zones (no GUI code)
+  ui.py                      Window, previews, log panel and zone editor
+assets/
   layout.json                Example zone layout
 test/                        Numbered scripts showing how the project developed
 docs/                        Development notes
