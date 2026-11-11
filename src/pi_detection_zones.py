@@ -9,8 +9,9 @@ from ui import DetectionUI, LogPanel, PreviewSystem, ZoneEditorController
 
 class DetectionApp:
 
-    def __init__(self):
+    def __init__(self, railway_intelligence=None):
         self.running = True
+        self.railway_intelligence = railway_intelligence
         self.camera_failure_logged = False
         self.latest_frame = None
         self.engine = DetectionEngine(
@@ -138,6 +139,9 @@ class DetectionApp:
             )
 
             for event in result["events"]:
+                if self.railway_intelligence is not None:
+                    self.railway_intelligence.process_occupancy_event(event)
+
                 self.log_panel.add_log(self.format_occupancy_event(event))
 
             self.latest_frame = frame
