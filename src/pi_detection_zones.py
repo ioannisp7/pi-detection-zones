@@ -236,6 +236,7 @@ class DetectionApp:
         except Exception:
             self.log_panel.add_log(traceback.format_exc())
 
-app = DetectionApp()
-app.run_frame_loop()
-app.root.mainloop()
+if __name__ == "__main__":
+    app = DetectionApp()
+    app.run_frame_loop()
+    app.root.mainloop()
