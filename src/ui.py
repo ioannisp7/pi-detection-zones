@@ -620,8 +620,8 @@ class ZoneEditorController:
     # When application is used as module, notify_zones_changed is used with another
     # zones intelligence application
     def notify_zones_changed(self):
-        if self.on_zones_changed is not None:
-            self.on_zones_changed()
+        if self.zones_changed is not None:
+            self.zones_changed()
 
     def parse_point(self, text_value: str) -> list[int]:
 
