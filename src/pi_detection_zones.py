@@ -21,6 +21,8 @@ class DetectionApp:
         self.log_panel = LogPanel()
         self.ui = None
         self.root = self.create_tkinter_gui()
+        if self.zones_intelligence is not None:
+            self.zones_intelligence.set_message_callback(self.log_message)
         self.zone_editor_controller = ZoneEditorController(
             self.engine,
             self.ui,
@@ -167,6 +169,9 @@ class DetectionApp:
         message = Messages.OBJECT_ENTERED if event.occupied else Messages.OBJECT_EXITED
 
         return message.format(zone_name=event.zone_name)
+
+    def log_message(self, message):
+        self.log_panel.add_log(message)
 
     def quit_program(self):
         self.running = False
