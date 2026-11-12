@@ -9,6 +9,11 @@ from ui import DetectionUI, LogPanel, PreviewSystem, ZoneEditorController
 
 class DetectionApp:
 
+    # zones_intelligence: optional object from another application that uses this one as a module.
+    # None (the default) runs the application standalone. Otherwise the object must provide:
+    #   set_message_callback(callback)  receives a function that writes a message to the system log
+    #   synchronize_zones(zone_names)   receives the list of zone names after every zone change or layout load
+    #   process_occupancy_event(event)  receives each OccupancyEvent (zone_name, occupied)
     def __init__(self, zones_intelligence=None):
         self.running = True
         self.zones_intelligence = zones_intelligence
@@ -127,8 +132,7 @@ class DetectionApp:
         self.synchronize_detection_zones()
         self.log_panel.add_log(Messages.LAYOUT_LOADED)
 
-    # When application is used as module, def synchronize_detection_zones syncs
-    # zones list with another zones intelligence application
+    # Sends the current zone names to zones_intelligence, if one is connected
     def synchronize_detection_zones(self):
         if self.zones_intelligence is None:
             return

@@ -617,8 +617,7 @@ class ZoneEditorController:
 
         self.zones_changed = zones_changed
 
-    # When application is used as module, notify_zones_changed is used with another
-    # zones intelligence application
+    # Calls zones_changed after a zone is added, updated or deleted. Used to keep a connected application in sync
     def notify_zones_changed(self):
         if self.zones_changed is not None:
             self.zones_changed()
