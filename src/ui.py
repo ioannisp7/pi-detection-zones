@@ -601,7 +601,8 @@ class ZoneEditorController:
         ui,
         log_panel,
         frame_width,
-        frame_height):
+        frame_height,
+        zones_changed=None):
 
         self.engine = engine
         self.zone_repository = engine.zone_repository
@@ -613,6 +614,14 @@ class ZoneEditorController:
 
         # Index of the point entry that has focus. A click on the camera preview fills this entry
         self.active_point_index = None
+
+        self.zones_changed = zones_changed
+
+    # When application is used as module, notify_zones_changed is used with another
+    # zones intelligence application
+    def notify_zones_changed(self):
+        if self.on_zones_changed is not None:
+            self.on_zones_changed()
 
     def parse_point(self, text_value: str) -> list[int]:
 
@@ -685,6 +694,7 @@ class ZoneEditorController:
         deleted_name = self.zone_repository.zones[selected_index].name
         self.engine.delete_zone(selected_index)
         self.refresh_zone_selector()
+        self.notify_zones_changed()
         self.log_panel.add_log(Messages.ZONE_DELETED.format(zone_name=deleted_name))
 
     def refresh_zone_selector(self, select_index=0):
@@ -779,6 +789,8 @@ class ZoneEditorController:
         )
 
         self.refresh_zone_selector(new_selection)
+
+        self.notify_zones_changed()
 
     def get_validation_message(self, error: ValueError):
 

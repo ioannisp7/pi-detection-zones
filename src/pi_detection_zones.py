@@ -9,9 +9,9 @@ from ui import DetectionUI, LogPanel, PreviewSystem, ZoneEditorController
 
 class DetectionApp:
 
-    def __init__(self, railway_intelligence=None):
+    def __init__(self, zones_intelligence=None):
         self.running = True
-        self.railway_intelligence = railway_intelligence
+        self.zones_intelligence = zones_intelligence
         self.camera_failure_logged = False
         self.latest_frame = None
         self.engine = DetectionEngine(
@@ -26,7 +26,8 @@ class DetectionApp:
             self.ui,
             self.log_panel,
             AppConfig.FRAME_WIDTH,
-            AppConfig.FRAME_HEIGHT
+            AppConfig.FRAME_HEIGHT,
+            zones_changed=self.synchronize_detection_zones
         )
         self.preview_controller = PreviewSystem(
             self.ui,
@@ -121,7 +122,21 @@ class DetectionApp:
             return
 
         self.zone_editor_controller.refresh_zone_selector()
+        self.synchronize_detection_zones()
         self.log_panel.add_log(Messages.LAYOUT_LOADED)
+
+    # When application is used as module, def synchronize_detection_zones syncs
+    # zones list with another zones intelligence application
+    def synchronize_detection_zones(self):
+        if self.zones_intelligence is None:
+            return
+
+        zone_names = []
+
+        for zone in self.engine.zone_repository.zones:
+            zone_names.append(zone.name)
+
+        self.zones_intelligence.synchronize_zones(zone_names)
 
     def run_frame_loop(self):
         if not self.running:
@@ -139,8 +154,8 @@ class DetectionApp:
             )
 
             for event in result["events"]:
-                if self.railway_intelligence is not None:
-                    self.railway_intelligence.process_occupancy_event(event)
+                if self.zones_intelligence is not None:
+                    self.zones_intelligence.process_occupancy_event(event)
 
                 self.log_panel.add_log(self.format_occupancy_event(event))
 
@@ -239,6 +254,7 @@ class DetectionApp:
             self.picam2.close()
         except Exception:
             self.log_panel.add_log(traceback.format_exc())
+
 
 if __name__ == "__main__":
     app = DetectionApp()
