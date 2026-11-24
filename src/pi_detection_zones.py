@@ -9,8 +9,14 @@ from ui import DetectionUI, LogPanel, PreviewSystem, ZoneEditorController
 
 class DetectionApp:
 
-    def __init__(self):
+    # zones_intelligence: optional object from another application that uses this one as a module.
+    # None (the default) runs the application standalone. Otherwise the object must provide:
+    #   set_message_callback(callback)  receives a function that writes a message to the system log
+    #   synchronize_zones(zone_names)   receives the list of zone names after every zone change or layout load
+    #   process_occupancy_event(event)  receives each OccupancyEvent (zone_name, occupied)
+    def __init__(self, zones_intelligence=None):
         self.running = True
+        self.zones_intelligence = zones_intelligence
         self.camera_failure_logged = False
         self.latest_frame = None
         self.engine = DetectionEngine(
@@ -20,12 +26,15 @@ class DetectionApp:
         self.log_panel = LogPanel()
         self.ui = None
         self.root = self.create_tkinter_gui()
+        if self.zones_intelligence is not None:
+            self.zones_intelligence.set_message_callback(self.log_message)
         self.zone_editor_controller = ZoneEditorController(
             self.engine,
             self.ui,
             self.log_panel,
             AppConfig.FRAME_WIDTH,
-            AppConfig.FRAME_HEIGHT
+            AppConfig.FRAME_HEIGHT,
+            zones_changed=self.synchronize_detection_zones
         )
         self.preview_controller = PreviewSystem(
             self.ui,
@@ -120,7 +129,20 @@ class DetectionApp:
             return
 
         self.zone_editor_controller.refresh_zone_selector()
+        self.synchronize_detection_zones()
         self.log_panel.add_log(Messages.LAYOUT_LOADED)
+
+    # Sends the current zone names to zones_intelligence, if one is connected
+    def synchronize_detection_zones(self):
+        if self.zones_intelligence is None:
+            return
+
+        zone_names = []
+
+        for zone in self.engine.zone_repository.zones:
+            zone_names.append(zone.name)
+
+        self.zones_intelligence.synchronize_zones(zone_names)
 
     def run_frame_loop(self):
         if not self.running:
@@ -138,6 +160,9 @@ class DetectionApp:
             )
 
             for event in result["events"]:
+                if self.zones_intelligence is not None:
+                    self.zones_intelligence.process_occupancy_event(event)
+
                 self.log_panel.add_log(self.format_occupancy_event(event))
 
             self.latest_frame = frame
@@ -148,6 +173,9 @@ class DetectionApp:
         message = Messages.OBJECT_ENTERED if event.occupied else Messages.OBJECT_EXITED
 
         return message.format(zone_name=event.zone_name)
+
+    def log_message(self, message):
+        self.log_panel.add_log(message)
 
     def quit_program(self):
         self.running = False
@@ -236,6 +264,8 @@ class DetectionApp:
         except Exception:
             self.log_panel.add_log(traceback.format_exc())
 
-app = DetectionApp()
-app.run_frame_loop()
-app.root.mainloop()
+
+if __name__ == "__main__":
+    app = DetectionApp()
+    app.run_frame_loop()
+    app.root.mainloop()

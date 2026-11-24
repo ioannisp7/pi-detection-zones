@@ -69,11 +69,11 @@ cd pi-detection-zones
 
 ## Running
 
-The application must be started from `src/splitted-files/`:
+The application must be started from `src/`:
 
 ```bash
-cd src/splitted-files
-python3 pi-detection-zones.py
+cd src/
+python3 pi_detection_zones.py
 ```
 
 It needs the Pi camera and a desktop display.
@@ -113,7 +113,7 @@ Click **Stop Preview** to stop drawing the camera images. Detection and the log 
 
 ## Configuration
 
-Settings are in `AppConfig` in `src/splitted-files/config.py`. The most useful ones:
+Settings are in `AppConfig` in `src/config.py`. The most useful ones:
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -141,18 +141,51 @@ Layouts are plain JSON. Each zone has a name and four `[x, y]` points in camera 
 }
 ```
 
-`src/layout.json` is an example layout.
+`assets/layout.json` is an example layout.
+
+## Using it from another application
+
+Another Python application can run pi-detection-zones and receive its zone changes and occupancy events. Importing `pi_detection_zones` does not start the camera or open the window.
+
+The modules import each other by plain name (`from config import ...`), so the other application must add this repository's `src/` folder to its import path first:
+
+```python
+import sys
+sys.path.insert(0, "/path/to/pi-detection-zones/src")
+
+from pi_detection_zones import DetectionApp
+
+
+class ZonesIntelligence:
+    def set_message_callback(self, callback):
+        # callback(message) writes a message to the pi-detection-zones system log
+        self.log = callback
+
+    def synchronize_zones(self, zone_names):
+        # Called after a zone is added, updated or deleted, and after a layout is loaded
+        pass
+
+    def process_occupancy_event(self, event):
+        # Called when a zone changes state: event.zone_name, event.occupied (True or False)
+        pass
+
+
+app = DetectionApp(zones_intelligence=ZonesIntelligence())
+app.run_frame_loop()
+app.root.mainloop()
+```
+
+Without `zones_intelligence`, `DetectionApp()` behaves exactly like the standalone application. See `docs/architecture.md` (section 10) for details.
 
 ## Project structure
 
 ```
 src/
-  splitted-files/            Current application
-    pi-detection-zones.py    Entry point: window, camera and frame loop
-    config.py                Settings (AppConfig) and log messages (Messages)
-    engine.py                Detection logic and zones (no GUI code)
-    ui.py                    Window, previews, log panel and zone editor
-  single-file/               Earlier single-file version, kept for reference
+  pi_detection_zones.py      Entry point: window, camera and frame loop
+  config.py                  Settings (AppConfig) and log messages (Messages)
+  engine.py                  Detection logic and zones (no GUI code)
+  ui.py                      Window, previews, log panel and zone editor
+assets/
   layout.json                Example zone layout
 test/                        Numbered scripts showing how the project developed
 docs/                        Development notes

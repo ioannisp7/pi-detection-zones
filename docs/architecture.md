@@ -4,7 +4,7 @@
 
 The application is organized into four main source files:
 
-- `pi-detection-zones.py` – Application entry point and orchestration.
+- `pi_detection_zones.py` – Application entry point and orchestration.
 - `config.py` – Application configuration and user-facing messages.
 - `engine.py` – Core detection logic and zone management.
 - `ui.py` – Graphical user interface, preview rendering and zone editing.
@@ -21,7 +21,7 @@ The main processing flow is:
 
 ## 2\. Application Components
 
-### 2.1 Application Entry Point – `pi-detection-zones.py`
+### 2.1 Application Entry Point – `pi_detection_zones.py`
 
 The entry point contains the `DetectionApp` class, which coordinates the application's components.
 
@@ -36,10 +36,13 @@ Its responsibilities include:
 - Updating the graphical previews.
 - Displaying detection events in the system log.
 - Handling user actions and application shutdown.
+- Optionally passing zone changes and occupancy events to a connected application (see section 10).
 
 Frame processing is scheduled through Tkinter's `root.after()` mechanism.
 
 The application uses a single main execution loop for camera capture, detection processing and graphical interface updates.
+
+Importing the module does not start the application. The camera, the window and the main loop start only when the file is run directly, or when another application creates a `DetectionApp` and starts it.
 
 ### 2.2 Configuration – `config.py`
 
@@ -258,7 +261,7 @@ The engine maintains these states in its `zone_states` dictionary, indexed by zo
 
 Occupancy events are generated only when the state changes. Repeated frames with the same occupancy state do not generate additional events.
 
-The current implementation identifies occupancy transitions but does not publish them through a dedicated external event interface.
+When another application is connected (see section 10), each event is also passed to it.
 
 Transitions are returned as `OccupancyEvent` objects containing the zone name and the new occupancy state. The application entry point converts each event into a log message using the `OBJECT_ENTERED` and `OBJECT_EXITED` entries in `Messages`, and displays it in the system log.
 
@@ -319,7 +322,7 @@ The following capabilities are not currently implemented:
 - Train direction or movement tracking.
 - Railway traffic management and route conflict detection.
 - Decisions regarding train movement or priority.
-- Communication with external applications through a structured event interface.
+- Communication with applications running in a separate process (the integration in section 10 works within the same Python program only).
 - Control of turnouts, motors, controllers or other railway hardware.
 - Multi-camera coordination.
 - Autonomous railway operation without the graphical application.
@@ -337,14 +340,18 @@ The project follows these principles:
 - **Configurable detection:** Detection thresholds and image-cleanup settings can be adjusted centrally.
 - **Simple execution model:** The current application uses a single-process, event-loop-based execution model without unnecessary concurrency.
 
-## 10\. Potential Future Integration
+## 10\. Integration with Other Applications
 
-The detection functionality may be reused as a vision component in other applications.
+The application can be used as a vision component by another Python application, for example a railway automation application.
 
-For example, a railway automation application could consume occupancy information from the detection engine and use it as input to a separate railway intelligence component.
+The other application imports `DetectionApp` and passes an object as the `zones_intelligence` argument. Without this argument the application runs standalone.
 
-Such integration would require a clearly defined interface for communicating occupancy states and transition events.
+The connected object must provide three methods:
 
-Railway-specific interpretation, traffic decisions and physical hardware control are outside the scope of `pi-detection-zones` and should remain the responsibility of the consuming application.
+- `set_message_callback(callback)` – Called once at startup. The callback writes a message to the system log, so the connected application can show its own messages there.
+- `synchronize_zones(zone_names)` – Called with the list of current zone names after a zone is added, updated or deleted, and after a layout is loaded.
+- `process_occupancy_event(event)` – Called with each `OccupancyEvent` when a zone changes state.
 
-The existing project remains a standalone generic detection application.
+The connection runs inside the same Python program and the same frame loop. The connected application receives zone names and occupancy events only; it does not receive camera frames or motion masks.
+
+The project remains usable as a standalone generic detection application or as a module to another application
